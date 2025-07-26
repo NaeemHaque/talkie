@@ -7,5 +7,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/gemini', [GeminiController::class, 'index'])->name('gemini');
-Route::post('/gemini', [GeminiController::class, 'getResponse'])->name('gemini.response');
+Route::get('/chat', [GeminiController::class, 'getResponse'])->name('gemini.chat');
+Route::post('/chat', [GeminiController::class, 'getResponse'])->name('gemini.send');
+
+// Additional conversation management routes
+Route::post('/chat/clear', [GeminiController::class, 'clearConversation'])->name('gemini.clear');
+Route::post('/chat/new', [GeminiController::class, 'newConversation'])->name('gemini.new');
+
+// If you want to keep your old route as well:
+Route::match(['GET', 'POST'], '/', [GeminiController::class, 'getResponse']);
