@@ -6,17 +6,10 @@ use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GeminiController extends Controller
 {
-    public function index()
-    {
-        return view('gemini', [
-            'response'    => null,
-            'last_prompt' => null,
-        ]);
-    }
-
     public function getResponse(Request $request)
     {
         $sessionId = $request->session()->getId();
@@ -45,9 +38,9 @@ class GeminiController extends Controller
                 'type' => $file->getMimeType()
             ];
 
-            // You can store the file and add file path to metadata
-            // $filePath = $file->store('chat-files', 'public');
-            // $fileData['path'] = $filePath;
+
+//             $filePath = $file->store('chat-files', 'public');
+//             $fileData['path'] = $filePath;
         }
 
         $conversation = Conversation::createEntry(
@@ -84,7 +77,7 @@ class GeminiController extends Controller
         } catch (\Exception $e) {
             $conversation->updateResponse('Sorry, I\'m temporarily unavailable. Please try again later.');
 
-            \Log::error('Gemini API Error: ' . $e->getMessage());
+            Log::error('Gemini API Error: ' . $e->getMessage());
         }
 
         $conversations = Conversation::getLatestBySession($sessionId);

@@ -8,7 +8,7 @@
 
         <!-- Input Container -->
         <div class="relative bg-[#1a1a1a] border border-[#333333] rounded-2xl shadow-lg focus-within:border-[#5b6df0] transition-all duration-200">
-            <div class="flex items-end gap-4 p-4">
+            <div class="flex items-end gap-4 px-4 py-2">
 
                 <!-- Text Input -->
                 <div class="flex-1">
