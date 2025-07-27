@@ -10,10 +10,9 @@ class Conversation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'session_id',
+        'chat_id',
         'user_message',
         'ai_response',
-        'model',
         'metadata'
     ];
 
@@ -24,21 +23,29 @@ class Conversation extends Model
     ];
 
     /**
-     * Get conversations grouped by session
+     * Get the chat that owns this conversation
      */
-    public static function getBySession(string $sessionId)
+    public function chat()
     {
-        return self::where('session_id', $sessionId)
+        return $this->belongsTo(Chat::class);
+    }
+
+    /**
+     * Get conversations for a specific chat
+     */
+    public static function getByChat(int $chatId)
+    {
+        return self::where('chat_id', $chatId)
                    ->orderBy('created_at', 'asc')
                    ->get();
     }
 
     /**
-     * Get the latest conversations for a session
+     * Get the latest conversations for a chat
      */
-    public static function getLatestBySession(string $sessionId, int $limit = 50)
+    public static function getLatestByChat(int $chatId, int $limit = 50)
     {
-        return self::where('session_id', $sessionId)
+        return self::where('chat_id', $chatId)
                    ->orderBy('created_at', 'desc')
                    ->limit($limit)
                    ->get()
@@ -48,10 +55,10 @@ class Conversation extends Model
     /**
      * Create a new conversation entry
      */
-    public static function createEntry(string $sessionId, string $userMessage, ?string $aiResponse = null, array $metadata = [])
+    public static function createEntry(int $chatId, string $userMessage, ?string $aiResponse = null, array $metadata = [])
     {
         return self::create([
-            'session_id' => $sessionId,
+            'chat_id' => $chatId,
             'user_message' => $userMessage,
             'ai_response' => $aiResponse,
             'metadata' => $metadata
@@ -65,5 +72,17 @@ class Conversation extends Model
     {
         $this->update(['ai_response' => $response]);
         return $this;
+    }
+
+    /**
+     * Get conversations for building context (last 10 exchanges)
+     */
+    public static function getContextForChat(int $chatId, int $limit = 10)
+    {
+        return self::where('chat_id', $chatId)
+                   ->orderBy('created_at', 'desc')
+                   ->limit($limit)
+                   ->get()
+                   ->reverse();
     }
 }

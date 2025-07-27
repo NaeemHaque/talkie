@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chat;
 use App\Models\Conversation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -13,14 +14,30 @@ class GeminiController extends Controller
     public function getResponse(Request $request)
     {
         $sessionId = $request->session()->getId();
+        $chatId = $request->input('chat_id');
 
-        $conversations = Conversation::getLatestBySession($sessionId);
+        // If no chat_id provided, get the latest chat or create a new one
+        if (!$chatId) {
+            $chat = Chat::getLatestBySession($sessionId);
+            if (!$chat) {
+                $chat = Chat::createChat($sessionId);
+            }
+            $chatId = $chat->id;
+        } else {
+            $chat = Chat::find($chatId);
+            if (!$chat) {
+                return redirect()->route('gemini.chat')->with('error', 'Chat not found.');
+            }
+        }
 
+        $conversations = Conversation::getByChat($chatId);
         $prompt = Arr::get($request, 'prompt');
 
         if (empty($prompt)) {
             return view('gemini', [
-                'conversations' => $conversations
+                'chat' => $chat,
+                'conversations' => $conversations,
+                'chats' => Chat::getBySession($sessionId)
             ]);
         }
 
@@ -37,18 +54,19 @@ class GeminiController extends Controller
                 'size' => $file->getSize(),
                 'type' => $file->getMimeType()
             ];
-
-
-//             $filePath = $file->store('chat-files', 'public');
-//             $fileData['path'] = $filePath;
         }
 
         $conversation = Conversation::createEntry(
-            $sessionId,
+            $chatId,
             $prompt,
             null,
             $fileData
         );
+
+        // Update chat title if this is the first message
+        if ($conversations->isEmpty()) {
+            $chat->updateTitleFromFirstMessage();
+        }
 
         try {
             $apiKey = config('services.gemini.secret');
@@ -80,10 +98,12 @@ class GeminiController extends Controller
             Log::error('Gemini API Error: ' . $e->getMessage());
         }
 
-        $conversations = Conversation::getLatestBySession($sessionId);
+        $conversations = Conversation::getByChat($chatId);
 
         return view('gemini', [
-            'conversations' => $conversations
+            'chat' => $chat,
+            'conversations' => $conversations,
+            'chats' => Chat::getBySession($sessionId)
         ]);
     }
 
@@ -118,18 +138,51 @@ class GeminiController extends Controller
 
     public function clearConversation(Request $request)
     {
-        $sessionId = $request->session()->getId();
-        Conversation::where('session_id', $sessionId)->delete();
+        $chatId = $request->input('chat_id');
 
-        return redirect()->back()->with('success', 'Conversation cleared successfully!');
+        if ($chatId) {
+            $chat = Chat::find($chatId);
+            if ($chat) {
+                $chat->deleteChat();
+            }
+        }
+
+        return redirect()->route('gemini.chat')->with('success', 'Conversation cleared successfully!');
     }
-
 
     public function newConversation(Request $request)
     {
-        $request->session()->regenerate();
+        $sessionId = $request->session()->getId();
+        $chat = Chat::createChat($sessionId);
 
-        return redirect()->route('gemini.chat')->with('success', 'New conversation started!');
+        return redirect()->route('gemini.chat', ['chat_id' => $chat->id])->with('success', 'New conversation started!');
     }
 
+    public function deleteChat(Request $request)
+    {
+        $chatId = $request->input('chat_id');
+        $chat = Chat::find($chatId);
+
+        if ($chat) {
+            $chat->deleteChat();
+            return redirect()->route('gemini.chat')->with('success', 'Chat deleted successfully!');
+        }
+
+        return redirect()->back()->with('error', 'Chat not found.');
+    }
+
+    public function loadChat(Request $request, $chatId)
+    {
+        $chat = Chat::getWithConversations($chatId);
+
+        if (!$chat) {
+            return redirect()->route('gemini.chat')->with('error', 'Chat not found.');
+        }
+
+        return view('gemini', [
+            'chat' => $chat,
+            'conversations' => $chat->conversations,
+            'chats' => Chat::getBySession($request->session()->getId())
+        ]);
+    }
 }

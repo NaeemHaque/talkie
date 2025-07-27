@@ -3,6 +3,11 @@
     <form action="/" method="POST" enctype="multipart/form-data" class="relative max-w-4xl mx-auto">
         @csrf
 
+        <!-- Hidden chat_id field -->
+        @if(isset($chat))
+            <input type="hidden" name="chat_id" value="{{ $chat->id }}">
+        @endif
+
         <!-- File Preview -->
         <x-file-preview />
 
@@ -69,7 +74,7 @@
     <!-- Footer Info -->
     <div class="text-center mt-6">
         <p class="text-xs text-[#a3a3a3]">
-            OrbitAI can make mistakes. Consider checking important information.
+            Talkie can make mistakes. Consider checking important information.
         </p>
     </div>
 </div>

@@ -9,7 +9,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
                 </svg>
             </div>
-            <span class="text-xs text-[#a3a3a3]">OrbitAI</span>
+            <span class="text-xs text-[#a3a3a3]">Talkie</span>
             @if(!$loading)
                 <span class="text-xs text-[#a3a3a3]">{{ $timestamp }}</span>
             @endif

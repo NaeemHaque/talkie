@@ -4,7 +4,7 @@
 
 @section('content')
     <!-- Chat Messages Area -->
-    <div id="messages" class="flex-1 mb-8 space-y-6 max-h-[60vh] overflow-y-auto">
+    <div id="messages" class="flex-1 mb-2 space-y-6 max-h-[60vh] overflow-y-auto">
 
         @if(!isset($conversations) || $conversations->isEmpty())
             <x-welcome-message />

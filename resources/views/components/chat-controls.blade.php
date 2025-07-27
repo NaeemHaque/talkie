@@ -1,6 +1,6 @@
 <!-- Chat Controls -->
 <div class="flex items-center gap-3">
-    @if($conversations->isNotEmpty())
+    @if(isset($chat))
         <form action="{{ route('gemini.new') }}" method="POST" class="inline">
             @csrf
             <button type="submit" class="p-2 text-[#a3a3a3] hover:text-[#e5e5e5] hover:bg-[#262626] rounded-lg transition-all duration-200" title="New Chat">
@@ -12,6 +12,7 @@
 
         <form action="{{ route('gemini.clear') }}" method="POST" class="inline">
             @csrf
+            <input type="hidden" name="chat_id" value="{{ $chat->id }}">
             <button type="submit" class="p-2 text-[#a3a3a3] hover:text-red-400 hover:bg-[#262626] rounded-lg transition-all duration-200" title="Clear Chat"
                     onclick="return confirm('Are you sure you want to clear this conversation?')">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
